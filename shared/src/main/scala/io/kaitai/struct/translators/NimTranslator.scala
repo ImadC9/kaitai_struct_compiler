@@ -7,6 +7,7 @@ import io.kaitai.struct.datatype._
 import io.kaitai.struct.datatype.DataType
 import io.kaitai.struct.datatype.DataType._
 import io.kaitai.struct.format.{EnumSpec, Identifier}
+import io.kaitai.struct.languages.NimCompiler
 import io.kaitai.struct.languages.NimCompiler.{ksToNim, namespaced, camelCase}
 
 class NimTranslator(provider: TypeProvider, importList: ImportList) extends BaseTranslator(provider) {
@@ -60,6 +61,8 @@ class NimTranslator(provider: TypeProvider, importList: ImportList) extends Base
       case Identifier.ROOT => s"${ksToNim(provider.determineType(Identifier.ROOT))}(this.${doName(s)})"
       case _ => s"this.${doName(s)}"
     }
+  override def doInternalName(id: Identifier): String =
+    s"this.${NimCompiler.idToStr(id)}"
   override def doIfExp(condition: expr, ifTrue: expr, ifFalse: expr): String =
     s"(if ${translate(condition)}: ${translate(ifTrue)} else: ${translate(ifFalse)})"
   override def arraySubscript(container: expr, idx: expr): String =
