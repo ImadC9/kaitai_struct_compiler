@@ -9,8 +9,6 @@ object EnumValueSpec {
     src match {
       case name: String =>
         fromSimpleName(name, path)
-      case x: Boolean =>
-        fromSimpleName(x.toString, path)
       case srcMap: Map[Any, Any] =>
         fromMap(ParseUtils.anyMapToStrMap(srcMap, path), path)
       case _ =>
@@ -32,7 +30,9 @@ object EnumValueSpec {
   def fromMap(srcMap: Map[String, Any], path: List[String]): EnumValueSpec = {
     ParseUtils.ensureLegalKeys(srcMap, LEGAL_KEYS, path, Some("enum value spec"))
 
-    val name = ParseUtils.getValueStr(srcMap, "id", path)
+    val name = ParseUtils.asIdentifier(
+      srcMap.getOrElse("id", throw KSYParseError.noKey("id", path)), path ++ List("id")
+    )
     Identifier.checkIdentifierSource(name, "enum value spec id", path)
 
     val doc = DocSpec.fromYaml(srcMap, path)
