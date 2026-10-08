@@ -62,6 +62,14 @@ class BooleanIdentifiersSpec extends AnyFunSpec {
     }
   }
 
+  it("documents current enum on/off coercion as a known limitation") {
+    // This records the current loader behavior, not a requirement to retain it.
+    // Update these expectations when enum members preserve scalar spelling.
+    val spec = parse(header + "enums:\n  flags:\n    0: on\n    1: off\n")
+    spec.enums("flags").map(BigInt(0)).name should be("true")
+    spec.enums("flags").map(BigInt(1)).name should be("false")
+  }
+
   it("rejects the issue's on/off example instead of renaming the fields") {
     val error = intercept[CompilationProblemException] {
       parse("""meta:
