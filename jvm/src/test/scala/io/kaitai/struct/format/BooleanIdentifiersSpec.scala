@@ -33,12 +33,22 @@ class BooleanIdentifiersSpec extends AnyFunSpec {
 
   locations.foreach { case (name, yaml, path, parsedName) =>
     describe(name) {
-      booleanScalars.foreach { scalar =>
+      booleanScalars.filter(_ => !name.startsWith("enum member")).foreach { scalar =>
         it(s"rejects unquoted $scalar at the source path") {
           val error = intercept[CompilationProblemException] { parse(yaml(scalar)) }
           error.problem.coords.path should be(Some(path))
           error.problem.text should include("expected string")
           error.problem.text should include("java.lang.Boolean")
+        }
+      }
+
+      // Enum members deliberately accept booleans. At this layer, YAML aliases
+      // such as `on` are indistinguishable from a literal `true`.
+      if (name.startsWith("enum member")) {
+        Seq("true", "false").flatMap(word => Seq(word, word.capitalize, word.toUpperCase)).foreach { scalar =>
+          it(s"keeps unquoted $scalar as a boolean enum member") {
+            parsedName(parse(yaml(scalar))) should be(scalar.toLowerCase)
+          }
         }
       }
 
