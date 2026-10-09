@@ -389,7 +389,11 @@ class NimCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     actual: Ast.expr,
     expected: Option[Ast.expr] = None
   ): Unit = {
-    out.puts(s"if not (${expression(checkExpr)}):")
+    val validationTranslator = attr.id match {
+      case id: InstanceIdentifier => new NimTranslator(typeProvider, importList, Some(id))
+      case _ => translator
+    }
+    out.puts(s"if not (${validationTranslator.translate(checkExpr)}):")
     out.inc
     val message = translator.doStringLiteral(attr.path.mkString("/", "/", ": validation failed"))
     out.puts(s"raise newException(KaitaiError, $message)")
