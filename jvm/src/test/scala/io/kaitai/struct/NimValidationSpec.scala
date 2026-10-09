@@ -46,6 +46,18 @@ class NimValidationSpec extends AnyFunSuite {
     assert(code.contains("if not (this.tokenInst == 9):"))
   }
 
+  test("lazy instance validation expressions use cached storage for self-references") {
+    val code = compile("instances:\n  token:\n    pos: 0\n    type: u1\n    valid:\n      expr: token == 9\n")
+    assert(code.contains("if not (this.tokenInst == 9):"))
+    assert(!code.contains("if not (this.token == 9):"))
+  }
+
+  test("cached self-reference translation is limited to the instance being validated") {
+    val code = compile("instances:\n  token:\n    pos: 0\n    type: u1\n    valid:\n      expr: token == other\n  other:\n    pos: 1\n    type: u1\n    valid: 9\n  copy:\n    value: token\n")
+    assert(code.contains("if not (this.tokenInst == this.other):"))
+    assert(code.contains("let copyInstExpr = uint8(this.token)"))
+  }
+
   test("fixed contents and any-of validation are emitted") {
     val code = compile("seq:\n  - id: magic\n    contents: [0x4f, 0x4b]\n  - id: value\n    type: u1\n    valid:\n      any-of: [5, 7]\n")
     assert(code.contains("if not (this.magic == @[79'u8, 75'u8]):"))
